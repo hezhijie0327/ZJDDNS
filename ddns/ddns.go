@@ -116,6 +116,8 @@ func (r *Runner) upsert(providers []Provider) {
 
 		for _, p := range providers {
 			if slices.Contains(p.Types(), recordType) {
+				// _ = error: the provider owns record-level logging and has
+				// already reported its own failure; the return is informational.
 				_ = p.Upsert(recordType, ip)
 			}
 		}
@@ -129,6 +131,8 @@ func (r *Runner) delete(providers []Provider) {
 		for _, recordType := range p.Types() {
 			log.Debugf("DDNS: Deleting %s record...", recordType)
 
+			// _ = error: the provider owns record-level logging and has
+			// already reported its own failure; the return is informational.
 			_ = p.Delete(recordType)
 		}
 	}
