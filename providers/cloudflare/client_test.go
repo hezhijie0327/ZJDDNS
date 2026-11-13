@@ -294,6 +294,29 @@ func TestUpsert(t *testing.T) {
 			t.Fatalf("Upsert() error = %v", err)
 		}
 	})
+
+	t.Run("lookup failure is not mistaken for an absent record", func(t *testing.T) {
+		created := false
+		client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+			switch r.Method {
+			case http.MethodGet:
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"success":false,"result":null,"errors":[{"code":10000,"message":"boom"}]}`))
+			case http.MethodPost:
+				created = true
+				jsonResponse(w, `{"id":"rec-new"}`)
+			default:
+				t.Errorf("unexpected method %s", r.Method)
+			}
+		})
+
+		if err := client.Upsert("A", ipdetect.IP{Value: ip, Source: ipdetect.SourceDNS}); err == nil {
+			t.Fatal("Upsert() error = nil, want the lookup failure to propagate")
+		}
+		if created {
+			t.Error("Upsert() created a record after a failed lookup — duplicate risk")
+		}
+	})
 }
 
 func TestDelete(t *testing.T) {
@@ -329,6 +352,29 @@ func TestDelete(t *testing.T) {
 		}
 		if !deleted {
 			t.Error("Delete() did not delete the record")
+		}
+	})
+
+	t.Run("lookup failure is an error, not a silent no-op", func(t *testing.T) {
+		deleted := false
+		client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+			switch r.Method {
+			case http.MethodGet:
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"success":false,"result":null,"errors":[{"code":10000,"message":"boom"}]}`))
+			case http.MethodDelete:
+				deleted = true
+				jsonResponse(w, `{"id":"rec-1"}`)
+			default:
+				t.Errorf("unexpected method %s", r.Method)
+			}
+		})
+
+		if err := client.Delete("A"); err == nil {
+			t.Fatal("Delete() error = nil, want the lookup failure to propagate")
+		}
+		if deleted {
+			t.Error("Delete() deleted after a failed lookup")
 		}
 	})
 }

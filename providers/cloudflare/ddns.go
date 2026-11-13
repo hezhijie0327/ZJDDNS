@@ -30,8 +30,14 @@ func (c *Client) Types() []string {
 func (c *Client) Upsert(recordType string, ip ipdetect.IP) error {
 	recordName := c.section.RecordName
 
-	// Check whether the record exists.
-	recordID, _ := c.RecordID(c.zoneID, recordType)
+	// Check whether the record exists. A lookup failure must not be
+	// mistaken for an absent record — that would turn a transient API
+	// error into a duplicate create below.
+	recordID, err := c.RecordID(c.zoneID, recordType)
+	if err != nil {
+		log.Errorf("CLOUDFLARE: Failed to look up %s record %s: %v", recordType, recordName, err)
+		return err
+	}
 
 	record := Record{
 		Type:    recordType,
@@ -85,8 +91,13 @@ func (c *Client) Upsert(recordType string, ip ipdetect.IP) error {
 func (c *Client) Delete(recordType string) error {
 	recordName := c.section.RecordName
 
-	// Look up the record ID.
-	recordID, _ := c.RecordID(c.zoneID, recordType)
+	// Look up the record ID. A lookup failure must not be mistaken for an
+	// absent record — that would report the delete as a silent success.
+	recordID, err := c.RecordID(c.zoneID, recordType)
+	if err != nil {
+		log.Errorf("CLOUDFLARE: Failed to look up %s record %s: %v", recordType, recordName, err)
+		return err
+	}
 	if recordID == "" {
 		log.Debugf("CLOUDFLARE: %s record %s does not exist", recordType, recordName)
 		return nil
