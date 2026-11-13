@@ -5,7 +5,7 @@
 #   sh scripts/bump-version.sh minor  # 1.6.0 → 1.7.0
 #   sh scripts/bump-version.sh major  # 1.6.0 → 2.0.0
 #
-# Conventions (see CLAUDE.md §Conventions):
+# Conventions (see AGENTS.md §Conventions):
 #   Z (patch) — bug fixes, perf improvements, refactors, linter fixes
 #   Y (minor) — new features, new config options
 #   X (major) — breaking config/schema/API changes

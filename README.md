@@ -162,7 +162,7 @@ go build \
 sh scripts/install-hook.sh        # Linux / macOS
 pwsh scripts/install-hook.ps1     # Windows
 
-# 版本号 bump（patch/minor/major，语义见 CLAUDE.md）
+# 版本号 bump（patch/minor/major，语义见 AGENTS.md）
 sh scripts/bump-version.sh patch
 ```
 

@@ -4,7 +4,7 @@
 #   pwsh scripts/bump-version.ps1 minor
 #   pwsh scripts/bump-version.ps1 major
 #
-# Conventions (see CLAUDE.md §Conventions):
+# Conventions (see AGENTS.md §Conventions):
 #   Z (patch) — bug fixes, perf improvements, refactors, linter fixes
 #   Y (minor) — new features, new config options
 #   X (major) — breaking config/schema/API changes
