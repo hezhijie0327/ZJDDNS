@@ -84,15 +84,15 @@ func TestRunnerRunUpsert(t *testing.T) {
 			name:     "A record with static IP",
 			cfg:      config.Config{IP: "203.0.113.1"},
 			provider: &stubProvider{mode: "upsert", types: []string{"A"}},
-			want:     []upsertCall{{recordType: "A", ip: ipdetect.IP{Value: "203.0.113.1", Source: "static"}}},
+			want:     []upsertCall{{recordType: "A", ip: ipdetect.IP{Value: "203.0.113.1", Source: ipdetect.SourceStatic}}},
 		},
 		{
 			name:     "A_AAAA with dual static IPs",
 			cfg:      config.Config{IP: "203.0.113.1,2001:db8::1"},
 			provider: &stubProvider{mode: "upsert", types: []string{"A", "AAAA"}},
 			want: []upsertCall{
-				{recordType: "A", ip: ipdetect.IP{Value: "203.0.113.1", Source: "static"}},
-				{recordType: "AAAA", ip: ipdetect.IP{Value: "2001:db8::1", Source: "static"}},
+				{recordType: "A", ip: ipdetect.IP{Value: "203.0.113.1", Source: ipdetect.SourceStatic}},
+				{recordType: "AAAA", ip: ipdetect.IP{Value: "2001:db8::1", Source: ipdetect.SourceStatic}},
 			},
 		},
 	}
@@ -121,7 +121,7 @@ func TestRunnerRunMixedModes(t *testing.T) {
 
 	runner.Run()
 
-	wantUpserts := []upsertCall{{recordType: "A", ip: ipdetect.IP{Value: "203.0.113.1", Source: "static"}}}
+	wantUpserts := []upsertCall{{recordType: "A", ip: ipdetect.IP{Value: "203.0.113.1", Source: ipdetect.SourceStatic}}}
 	if !reflect.DeepEqual(upserter.upserts, wantUpserts) {
 		t.Errorf("upsert provider calls = %+v, want %+v", upserter.upserts, wantUpserts)
 	}

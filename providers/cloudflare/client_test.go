@@ -235,7 +235,7 @@ func TestUpsert(t *testing.T) {
 			}
 		})
 
-		if err := client.Upsert("A", ipdetect.IP{Value: ip, Source: "DNS"}); err != nil {
+		if err := client.Upsert("A", ipdetect.IP{Value: ip, Source: ipdetect.SourceDNS}); err != nil {
 			t.Fatalf("Upsert() error = %v", err)
 		}
 		if !posted {
@@ -268,7 +268,7 @@ func TestUpsert(t *testing.T) {
 			}
 		})
 
-		if err := client.Upsert("A", ipdetect.IP{Value: ip, Source: "DNS"}); err != nil {
+		if err := client.Upsert("A", ipdetect.IP{Value: ip, Source: ipdetect.SourceDNS}); err != nil {
 			t.Fatalf("Upsert() error = %v", err)
 		}
 		if !updated {
@@ -290,7 +290,7 @@ func TestUpsert(t *testing.T) {
 			}
 		})
 
-		if err := client.Upsert("A", ipdetect.IP{Value: ip, Source: "DNS"}); err != nil {
+		if err := client.Upsert("A", ipdetect.IP{Value: ip, Source: ipdetect.SourceDNS}); err != nil {
 			t.Fatalf("Upsert() error = %v", err)
 		}
 	})

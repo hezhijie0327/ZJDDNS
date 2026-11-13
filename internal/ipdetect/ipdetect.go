@@ -41,6 +41,18 @@ const (
 	detectTimeout = 5 * time.Second
 )
 
+// IP provenance values carried by IP.Source: how the published address
+// was obtained. The vocabulary is closed — static closes it in ddns's
+// static-IP path.
+const (
+	// SourceDNS marks an address detected via the whoami DNS query.
+	SourceDNS = "DNS"
+	// SourceHTTP marks an address detected via the trace endpoint.
+	SourceHTTP = "HTTP"
+	// SourceStatic marks an address taken from the static config setting.
+	SourceStatic = "static"
+)
+
 // IPv4 returns the detected public WAN IPv4 address.
 func (d *Detector) IPv4() (IP, error) { return d.detect(false) }
 
@@ -80,7 +92,7 @@ func (d *Detector) detectViaDNS(forceIPv6 bool) (IP, error) {
 		return IP{}, fmt.Errorf("invalid IP from DNS: %s", txt)
 	}
 
-	return IP{Value: txt, Source: "DNS"}, nil
+	return IP{Value: txt, Source: SourceDNS}, nil
 }
 
 // detectViaTrace queries the Cloudflare trace endpoint with the dialer
@@ -122,7 +134,7 @@ func (d *Detector) detectViaTrace(forceIPv6 bool) (IP, error) {
 	for line := range strings.SplitSeq(string(body), "\n") {
 		if ip, found := strings.CutPrefix(line, "ip="); found {
 			if validFamilyIP(ip, forceIPv6) {
-				return IP{Value: ip, Source: "HTTP"}, nil
+				return IP{Value: ip, Source: SourceHTTP}, nil
 			}
 		}
 	}

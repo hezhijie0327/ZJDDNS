@@ -80,7 +80,7 @@ func staticIP(setting, recordType string) (ipdetect.IP, error) {
 		return ipdetect.IP{}, fmt.Errorf("invalid static IP %q for %s record", value, recordType)
 	}
 
-	return ipdetect.IP{Value: value, Source: "static"}, nil
+	return ipdetect.IP{Value: value, Source: ipdetect.SourceStatic}, nil
 }
 
 // unionTypes collects the record types of the given providers, deduped
