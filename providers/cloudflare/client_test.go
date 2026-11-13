@@ -74,6 +74,20 @@ func TestZoneIDNotFound(t *testing.T) {
 	}
 }
 
+func TestZoneIDEscapesName(t *testing.T) {
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		if q := r.URL.Query(); q.Get("name") != "ex ample.com" {
+			t.Errorf("query = %s, want decoded name=ex ample.com", r.URL.RawQuery)
+		}
+		jsonResponse(w, `[]`)
+	})
+	client.section.ZoneName = "ex ample.com"
+
+	if _, err := client.ZoneID(); !errors.Is(err, ErrZoneNotFound) {
+		t.Errorf("ZoneID() error = %v, want ErrZoneNotFound", err)
+	}
+}
+
 func TestRecordID(t *testing.T) {
 	t.Run("found", func(t *testing.T) {
 		client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
@@ -103,6 +117,22 @@ func TestRecordID(t *testing.T) {
 		}
 		if got != "" {
 			t.Errorf("RecordID() = %q, want empty", got)
+		}
+	})
+
+	t.Run("escapes query params", func(t *testing.T) {
+		client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+			// The handler receives the decoded values — the name survives
+			// characters with reserved meaning in a query string.
+			if q := r.URL.Query(); q.Get("name") != "ddns & test.example.com" || q.Get("type") != "A" {
+				t.Errorf("query = %s, want decoded name=ddns & test.example.com&type=A", r.URL.RawQuery)
+			}
+			jsonResponse(w, `[]`)
+		})
+		client.section.RecordName = "ddns & test.example.com"
+
+		if _, err := client.RecordID("zone-1", "A"); err != nil {
+			t.Fatalf("RecordID() error = %v", err)
 		}
 	})
 }

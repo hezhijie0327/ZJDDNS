@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 // zone is a Cloudflare zone entry.
@@ -14,7 +15,10 @@ type zone struct {
 
 // ZoneID returns the ID of the configured zone.
 func (c *Client) ZoneID() (string, error) {
-	resp, err := c.request(http.MethodGet, "/client/v4/zones?name="+c.section.ZoneName, nil)
+	// Query params are escaped: zone_name is user config and may contain
+	// characters with reserved meaning in a URL query string.
+	q := url.Values{"name": {c.section.ZoneName}}
+	resp, err := c.request(http.MethodGet, "/client/v4/zones?"+q.Encode(), nil)
 	if err != nil {
 		return "", err
 	}
