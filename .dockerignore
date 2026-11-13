@@ -1,0 +1,28 @@
+# Secrets — never send local config (API tokens) to the build context.
+# The Dockerfile ADDs the whole tree; README instructs users to create
+# config.json right here in the repo root.
+config.json
+.env
+
+# Build artifacts & binaries
+zjddns
+*.exe
+*.test
+*.out
+*.prof
+coverage.txt
+/tmp/
+/dist/
+
+# Editor / IDE / OS
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
