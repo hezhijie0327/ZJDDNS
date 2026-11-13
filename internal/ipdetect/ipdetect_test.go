@@ -18,7 +18,7 @@ func answerResponse(id, flags, recordType uint16, rdata []byte) []byte {
 	resp = binary.BigEndian.AppendUint16(resp, 0) // NSCOUNT
 	resp = binary.BigEndian.AppendUint16(resp, 0) // ARCOUNT
 
-	// 问题段：whoami.cloudflare + TXT(16) + CH(3)
+	// Question section: whoami.cloudflare + TXT(16) + CH(3)
 	resp = append(resp, 0x06)
 	resp = append(resp, "whoami"...)
 	resp = append(resp, 0x0A)
@@ -27,7 +27,7 @@ func answerResponse(id, flags, recordType uint16, rdata []byte) []byte {
 	resp = binary.BigEndian.AppendUint16(resp, 16)
 	resp = binary.BigEndian.AppendUint16(resp, 3)
 
-	// 答案段：压缩指针指向问题段名称 + Type + Class IN + TTL + RDATA
+	// Answer section: compression pointer to the question name + type + class IN + TTL + RDATA
 	resp = binary.BigEndian.AppendUint16(resp, 0xC00C)
 	resp = binary.BigEndian.AppendUint16(resp, recordType)
 	resp = binary.BigEndian.AppendUint16(resp, 1)
@@ -66,7 +66,7 @@ func TestBuildDNSQuery(t *testing.T) {
 		t.Errorf("QDCOUNT = %d, want 1", got)
 	}
 
-	// 问题段：whoami.cloudflare + TXT(16) + CH(3)
+	// Question section: whoami.cloudflare + TXT(16) + CH(3)
 	question := query[12:]
 	want := []byte{0x06}
 	want = append(want, "whoami"...)
@@ -156,7 +156,7 @@ func TestParseDNSResponse(t *testing.T) {
 		},
 		{
 			name:    "no TXT records",
-			resp:    answerResponse(id, 0x8180, 1, []byte{203, 0, 113, 1}), // A 记录
+			resp:    answerResponse(id, 0x8180, 1, []byte{203, 0, 113, 1}), // A record
 			wantErr: "no TXT record",
 		},
 	}
