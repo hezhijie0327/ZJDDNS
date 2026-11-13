@@ -11,6 +11,17 @@ import (
 	"zjddns/providers"
 )
 
+// fatalExitCode is the process exit status for startup failures
+// (config load/validate, provider init) — containers and service
+// managers must be able to detect a misconfigured run.
+const fatalExitCode = 1
+
+// fatalStartupError logs a startup failure and exits non-zero.
+func fatalStartupError(format string, args ...any) {
+	log.Errorf(format, args...)
+	os.Exit(fatalExitCode)
+}
+
 func main() {
 	// Custom usage text.
 	flag.Usage = func() {
@@ -48,8 +59,7 @@ func main() {
 	// Load the configuration.
 	cfg, err := config.Load(*configPath)
 	if err != nil {
-		log.Errorf("CONFIG: Failed to load config: %v", err)
-		return
+		fatalStartupError("CONFIG: Failed to load config: %v", err)
 	}
 	log.Infof("CONFIG: Loaded config: %s", *configPath)
 
@@ -62,16 +72,14 @@ func main() {
 
 	// Validate the configuration.
 	if err := cfg.Validate(); err != nil {
-		log.Errorf("CONFIG: Invalid config: %v", err)
-		return
+		fatalStartupError("CONFIG: Invalid config: %v", err)
 	}
 
 	// Construct every configured provider; multiple providers may run at
 	// once, each updating its own records.
 	ps, err := providers.All(cfg)
 	if err != nil {
-		log.Errorf("CONFIG: Failed to initialize provider: %v", err)
-		return
+		fatalStartupError("CONFIG: Failed to initialize provider: %v", err)
 	}
 	runner := ddns.New(ps, cfg)
 
