@@ -83,12 +83,7 @@ func NewLogger() *Logger {
 
 // SetLevel sets the logging level, clamped to the valid range.
 func (m *Logger) SetLevel(lvl Level) {
-	if lvl < Error {
-		lvl = Error
-	} else if lvl > Debug {
-		lvl = Debug
-	}
-	m.level.Store(int32(lvl))
+	m.level.Store(int32(min(max(lvl, Error), Debug)))
 }
 
 // Level returns the current logging level.
@@ -126,11 +121,7 @@ func (m *Logger) Log(lvl Level, format string, args ...any) {
 	if format == "" {
 		return
 	}
-	if lvl < Error {
-		lvl = Error
-	} else if lvl > Debug {
-		lvl = Debug
-	}
+	lvl = min(max(lvl, Error), Debug)
 	if lvl > Level(m.level.Load()) {
 		return
 	}
@@ -278,25 +269,24 @@ func sanitizeLogMessage(msg string) string {
 	if msg == "" {
 		return msg
 	}
-	needsReplace := false
-	for i := 0; i < len(msg); i++ {
-		c := msg[i]
-		if c <= 0x1f || c == 0x7f {
-			needsReplace = true
-			break
-		}
-	}
-	if !needsReplace {
+	// Fast path: nothing to replace.
+	if !strings.ContainsFunc(msg, isControlByte) {
 		return msg
 	}
 	b := make([]byte, 0, len(msg))
-	for i := 0; i < len(msg); i++ {
+	for i := range len(msg) {
 		c := msg[i]
-		if c <= 0x1f || c == 0x7f {
+		if isControlByte(rune(c)) {
 			b = append(b, ' ')
 		} else {
 			b = append(b, c)
 		}
 	}
 	return string(b)
+}
+
+// isControlByte reports whether r is a control character that could
+// break terminal output. Multi-byte runes are never control bytes.
+func isControlByte(r rune) bool {
+	return r <= 0x1f || r == 0x7f
 }

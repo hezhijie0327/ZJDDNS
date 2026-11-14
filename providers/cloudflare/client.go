@@ -3,12 +3,12 @@
 package cloudflare
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 	"zjddns/config"
 	"zjddns/internal/log"
@@ -82,7 +82,7 @@ func (c *Client) request(method, path string, payload any) (*response, error) {
 		if err != nil {
 			return nil, err
 		}
-		bodyReader = strings.NewReader(string(data))
+		bodyReader = bytes.NewReader(data)
 	}
 
 	req, err := http.NewRequest(method, url, bodyReader)
