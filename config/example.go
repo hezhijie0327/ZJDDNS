@@ -6,7 +6,7 @@ import "encoding/json"
 func Example() (string, error) {
 	cfg := &Config{
 		IP:             DefaultIP,
-		UpdateInterval: new(int),
+		UpdateInterval: new(defaultUpdateIntervalSeconds),
 		LogLevel:       DefaultLogLevel,
 		Cloudflare: []CloudflareConfig{
 			{
@@ -15,11 +15,10 @@ func Example() (string, error) {
 				RecordName: "ddns.example.com",
 				Mode:       ModeUpsert,
 				Type:       TypeAAndAAAA,
-				TTL:        1,
+				TTL:        defaultTTLAuto,
 			},
 		},
 	}
-	*cfg.UpdateInterval = defaultUpdateIntervalSeconds
 
 	data, err := json.MarshalIndent(cfg, "", "  ") //nolint:gosec // serializes placeholder values, no real secrets
 	if err != nil {

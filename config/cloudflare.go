@@ -16,9 +16,12 @@ type CloudflareConfig struct {
 	ProxyStatus bool   `json:"proxy_status,omitempty"` // true or false (default: false)
 }
 
-// validTTLs are the TTL values accepted by the Cloudflare API
-// (1 = auto; other providers define their own TTL rules).
-var validTTLs = map[int]bool{1: true, 120: true, 300: true, 600: true, 900: true, 1800: true, 3600: true, 7200: true, 18000: true, 43200: true, 86400: true}
+// defaultTTLAuto is the TTL meaning "automatic" for Cloudflare; it is
+// also the section default (other providers define their own TTL rules).
+const defaultTTLAuto = 1
+
+// validTTLs are the TTL values accepted by the Cloudflare API.
+var validTTLs = map[int]bool{defaultTTLAuto: true, 120: true, 300: true, 600: true, 900: true, 1800: true, 3600: true, 7200: true, 18000: true, 43200: true, 86400: true}
 
 // setDefaults fills empty settings with their default values.
 func (c *CloudflareConfig) setDefaults() {
@@ -29,7 +32,7 @@ func (c *CloudflareConfig) setDefaults() {
 		c.Type = DefaultType
 	}
 	if c.TTL == 0 {
-		c.TTL = 1
+		c.TTL = defaultTTLAuto
 	}
 }
 

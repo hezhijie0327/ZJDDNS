@@ -34,8 +34,7 @@ func (c *Config) SetDefaults() {
 	}
 	// UpdateInterval nil means the default interval.
 	if c.UpdateInterval == nil {
-		c.UpdateInterval = new(int)
-		*c.UpdateInterval = defaultUpdateIntervalSeconds
+		c.UpdateInterval = new(defaultUpdateIntervalSeconds)
 	}
 	// Per-provider section defaults.
 	for i := range c.Cloudflare {

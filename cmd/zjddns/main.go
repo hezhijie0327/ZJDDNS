@@ -11,10 +11,15 @@ import (
 	"zjddns/providers"
 )
 
-// fatalExitCode is the process exit status for startup failures
-// (config load/validate, provider init) — containers and service
-// managers must be able to detect a misconfigured run.
-const fatalExitCode = 1
+const (
+	// defaultConfigPath is the config file used when -config is not given.
+	defaultConfigPath = "config.json"
+
+	// fatalExitCode is the process exit status for startup failures
+	// (config load/validate, provider init) — containers and service
+	// managers must be able to detect a misconfigured run.
+	fatalExitCode = 1
+)
 
 // fatalStartupError logs a startup failure and exits non-zero.
 func fatalStartupError(format string, args ...any) {
@@ -35,7 +40,7 @@ func main() {
 	}
 
 	// Parse the command line flags.
-	configPath := flag.String("config", "config.json", "Path to config file")
+	configPath := flag.String("config", defaultConfigPath, "Path to config file")
 	generateConfig := flag.Bool("generate-config", false, "Generate example config file")
 	showVersion := flag.Bool("version", false, "Show version information")
 	flag.Parse()

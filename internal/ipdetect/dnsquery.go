@@ -10,6 +10,25 @@ import (
 	"time"
 )
 
+// Wire-format constants for the hand-rolled query layer (RFC 1035).
+const (
+	// dnsPort is the DNS service port.
+	dnsPort = "53"
+	// dnsHeaderLen is the fixed DNS message header length (§4.1.1).
+	dnsHeaderLen = 12
+	// dnsRRFixedLen is the fixed length of an answer RR's type, class,
+	// TTL and RDLENGTH fields (§4.1.3); RDLENGTH is its last field.
+	dnsRRFixedLen = 10
+	// udpReadBufSize bounds a UDP response read; larger answers arrive
+	// with TC set and retry over TCP.
+	udpReadBufSize = 4096
+	// dnsLabelMaxLen bounds a single label (§2.3.4).
+	dnsLabelMaxLen = 63
+	// dnsTypeTXT with dnsClassCH addresses the CHAOS-class whoami record.
+	dnsTypeTXT = 16
+	dnsClassCH = 3
+)
+
 // dnsQueryTXT sends a DNS TXT query and returns the record content.
 func dnsQueryTXT(server, name string) (string, error) {
 	id := uint16(time.Now().UnixNano()) //nolint:gosec // DNS query ID, truncation to 16 bits is intentional
@@ -22,7 +41,7 @@ func dnsQueryTXT(server, name string) (string, error) {
 // buildDNSQuery builds a DNS query packet (type TXT, class CH).
 func buildDNSQuery(id uint16, name string) []byte {
 	// Header: ID(2) + Flags(2) + QDCOUNT(2) + ANCOUNT(2) + NSCOUNT(2) + ARCOUNT(2)
-	query := make([]byte, 0, 12+len(name)+2+4)
+	query := make([]byte, 0, dnsHeaderLen+len(name)+2+4)
 	query = binary.BigEndian.AppendUint16(query, id)
 	query = binary.BigEndian.AppendUint16(query, 0x0100) // RD (recursion desired) flag
 	query = binary.BigEndian.AppendUint16(query, 1)      // QDCOUNT
@@ -32,19 +51,21 @@ func buildDNSQuery(id uint16, name string) []byte {
 
 	// Encode the domain name.
 	for label := range strings.SplitSeq(name, ".") {
-		query = append(query, byte(len(label))) //nolint:gosec // label from constant domain name, always <= 63
+		query = append(query, byte(len(label))) //nolint:gosec // label from constant domain name, always <= dnsLabelMaxLen
 		query = append(query, label...)
 	}
 
-	// Root terminator + query type TXT(16) and class CH(3).
-	query = append(query, 0, 0x00, 0x10, 0x00, 0x03)
+	// Root terminator + query type TXT and class CH.
+	query = append(query, 0)
+	query = binary.BigEndian.AppendUint16(query, dnsTypeTXT)
+	query = binary.BigEndian.AppendUint16(query, dnsClassCH)
 
 	return query
 }
 
 // dnsQueryUDP sends the DNS query over UDP.
 func dnsQueryUDP(server string, query []byte, id uint16) (string, error) {
-	conn, err := net.DialTimeout("udp", net.JoinHostPort(server, "53"), detectTimeout)
+	conn, err := net.DialTimeout("udp", net.JoinHostPort(server, dnsPort), detectTimeout)
 	if err != nil {
 		return "", err
 	}
@@ -57,7 +78,7 @@ func dnsQueryUDP(server string, query []byte, id uint16) (string, error) {
 		return "", err
 	}
 
-	buf := make([]byte, 4096)
+	buf := make([]byte, udpReadBufSize)
 	n, err := conn.Read(buf)
 	if err != nil {
 		return "", err
@@ -74,7 +95,7 @@ func dnsQueryUDP(server string, query []byte, id uint16) (string, error) {
 // dnsQueryTCP sends the DNS query over TCP (used when the UDP response
 // is truncated).
 func dnsQueryTCP(server string, query []byte, id uint16) (string, error) {
-	conn, err := net.DialTimeout("tcp", net.JoinHostPort(server, "53"), detectTimeout)
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(server, dnsPort), detectTimeout)
 	if err != nil {
 		return "", err
 	}
@@ -108,7 +129,7 @@ func dnsQueryTCP(server string, query []byte, id uint16) (string, error) {
 // parseDNSResponse parses a DNS response and returns the TXT record
 // content.
 func parseDNSResponse(resp []byte, id uint16) (string, error) {
-	if len(resp) < 12 {
+	if len(resp) < dnsHeaderLen {
 		return "", errors.New("DNS response too short")
 	}
 
@@ -125,7 +146,7 @@ func parseDNSResponse(resp []byte, id uint16) (string, error) {
 	}
 
 	// Skip the question section.
-	offset := skipDNSName(resp, 12)
+	offset := skipDNSName(resp, dnsHeaderLen)
 	if offset < 0 || offset+4 > len(resp) {
 		return "", errors.New("invalid DNS question section")
 	}
@@ -136,18 +157,18 @@ func parseDNSResponse(resp []byte, id uint16) (string, error) {
 	var txts []string
 	for range anCount {
 		offset = skipDNSName(resp, offset)
-		if offset < 0 || offset+10 > len(resp) {
+		if offset < 0 || offset+dnsRRFixedLen > len(resp) {
 			return "", errors.New("invalid DNS answer header")
 		}
 
 		recordType := binary.BigEndian.Uint16(resp[offset : offset+2])
-		rdLength := int(binary.BigEndian.Uint16(resp[offset+8 : offset+10]))
-		offset += 10
+		rdLength := int(binary.BigEndian.Uint16(resp[offset+8 : offset+dnsRRFixedLen]))
+		offset += dnsRRFixedLen
 		if offset+rdLength > len(resp) {
 			return "", errors.New("invalid DNS answer data")
 		}
 
-		if recordType == 16 { // TXT
+		if recordType == dnsTypeTXT {
 			for i := 0; i < rdLength; {
 				length := int(resp[offset+i])
 				i++
@@ -180,7 +201,7 @@ func skipDNSName(msg []byte, offset int) int {
 			// Compression pointer occupies 2 bytes.
 			return offset + 2
 		}
-		if length > 63 {
+		if length > dnsLabelMaxLen {
 			return -1
 		}
 		offset += 1 + length
