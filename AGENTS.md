@@ -137,4 +137,4 @@ All logs use `zjddns/internal/log` (package-level `Default` logger, ZJDNS-style)
 
 ## Audit
 
-Quality audits follow [AUDIT.md](AUDIT.md) — the reusable playbook (dimensions, sprint policy, gates, archive layout). Run an audit before releases and whenever a substantial feature lands; findings and fixes are archived under `docs/audit/`.
+Quality audits follow [AUDIT.md](AUDIT.md) — the reusable playbook (gates, dimensions, sprint policy, root-cause corpus, known trade-offs). Run an audit before releases and whenever a substantial feature lands; lessons are backfilled into AGENTS.md and AUDIT.md directly — no separate report archives.
