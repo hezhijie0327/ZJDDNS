@@ -3,8 +3,9 @@
 // The top level holds provider-agnostic settings (IP resolution, update
 // scheduling, logging); each provider owns a nested section array (e.g.
 // "cloudflare": [...]). Multiple sections — of the same or different
-// providers — may be configured at once; every configured section runs
-// concurrently and updates its own records.
+// providers — may be configured at once; every configured section
+// becomes its own Provider instance and updates its own records
+// (execution is sequential).
 package config
 
 import (

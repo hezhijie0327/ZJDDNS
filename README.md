@@ -74,7 +74,7 @@ go build -o zjddns ./cmd/zjddns
   "log_level": "info",
   "cloudflare": [
     {
-      "api_token": "your_cloudflare_api_token",
+      "api_token": "your-cloudflare-api-token",
       "zone_name": "example.com",
       "record_name": "ddns.example.com",
       "mode": "upsert",
@@ -125,6 +125,8 @@ zjddns/
 │   └── cloudflare/         ← Cloudflare API v4 客户端（zone、DNS 记录 CRUD）
 ├── ddns/                   ← Provider 接口 + upsert/delete 编排（IP 检测接线）
 ├── internal/ipdetect/      ← WAN IP 检测（手写 DNS 查询 + HTTP trace 回退）
+├── internal/log/           ← 分级日志（组件过滤）
+├── docs/                   ← 提供商文档（docs/providers/）
 └── scripts/                ← pre-commit hook 安装、版本 bump
 ```
 

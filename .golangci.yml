@@ -1,5 +1,6 @@
 # ZJDDNS golangci-lint configuration.
-# Run: golangci-lint run && golangci-lint fmt
+# Run: go fix ./... && golangci-lint fmt && golangci-lint run
+# (same order as the pre-commit hook)
 version: "2"
 
 linters:
