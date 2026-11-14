@@ -25,7 +25,14 @@ esac
 
 # ── Parse current version from version.go ────────────────────────────────
 VERSION_FILE="cmd/zjddns/version.go"
-CURRENT=$(grep 'Version\s*=' "$VERSION_FILE" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+CURRENT=$(grep 'Version[[:space:]]*=' "$VERSION_FILE" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+
+# Validate the parsed semver before arithmetic — a failed grep would
+# otherwise produce a silent no-op bump.
+if ! printf '%s\n' "$CURRENT" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+    echo "ERROR: could not parse a semver from $VERSION_FILE (got: '$CURRENT')" >&2
+    exit 1
+fi
 echo "Current version: $CURRENT"
 
 MAJOR=$(echo "$CURRENT" | cut -d. -f1)
@@ -47,6 +54,12 @@ if [ "$(uname)" = "Darwin" ]; then
     sed -i '' "s/Version[[:space:]]*=[[:space:]]*\"$CURRENT\"/Version     = \"$NEW\"/" "$VERSION_FILE"
 else
     sed -i "s/Version[[:space:]]*=[[:space:]]*\"$CURRENT\"/Version     = \"$NEW\"/" "$VERSION_FILE"
+fi
+
+# Verify the replacement actually landed.
+if ! grep -q "Version[[:space:]]*=[[:space:]]*\"$NEW\"" "$VERSION_FILE"; then
+    echo "ERROR: version replacement did not land in $VERSION_FILE" >&2
+    exit 1
 fi
 echo "Bumped $VERSION_FILE"
 

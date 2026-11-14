@@ -7,8 +7,12 @@ $hookSource = Join-Path $PSScriptRoot "pre-commit"
 $hookDest   = Join-Path (Split-Path $PSScriptRoot -Parent) ".git\hooks\pre-commit"
 
 if (-not (Test-Path $hookSource)) {
+    # Write-Error terminates under the Stop preference — no exit needed.
     Write-Error "Hook script not found: $hookSource"
-    exit 1
+}
+
+if (Test-Path $hookDest) {
+    Write-Host "NOTE: overwriting the existing hook at .git/hooks/pre-commit"
 }
 
 Copy-Item -Path $hookSource -Destination $hookDest -Force

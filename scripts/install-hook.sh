@@ -12,6 +12,10 @@ if [ ! -f "$hook_src" ]; then
     exit 1
 fi
 
+if [ -f "$hook_dst" ]; then
+    echo "NOTE: overwriting the existing hook at .git/hooks/pre-commit"
+fi
+
 cp "$hook_src" "$hook_dst"
 chmod +x "$hook_dst"
 echo "Pre-commit hook installed to .git/hooks/pre-commit"

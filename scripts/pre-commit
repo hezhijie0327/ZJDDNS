@@ -4,12 +4,24 @@
 #
 # Only files that were already staged are re-added after formatting —
 # unstaged files touched by golangci-lint fmt stay in the working tree
-# for the user to review separately.
+# for the user to review separately. A file is re-added only when the
+# formatters changed its worktree content during this hook, so a
+# partially staged file keeps its unstaged hunks unless it was really
+# reformatted.
 
 set -e
 
 # Remember which files were already staged (C=copy, A=add, M=modified).
 staged=$(git diff --cached --name-only --diff-filter=ACM)
+
+# Snapshot each staged file's worktree blob hash before formatting.
+before=$(mktemp)
+trap 'rm -f "$before"' EXIT
+for f in $staged; do
+	if [ -f "$f" ]; then
+		printf '%s %s\n' "$(git hash-object "$f")" "$f" >> "$before"
+	fi
+done
 
 echo "==> go fix..."
 go fix ./...
@@ -17,16 +29,13 @@ go fix ./...
 echo "==> golangci-lint fmt..."
 golangci-lint fmt ./...
 
-# Re-stage staged files modified by go fix or golangci-lint fmt.
-# Unstaged files touched by either stay in the working tree for review.
-if [ -n "$staged" ]; then
-	for f in $staged; do
-		if [ -f "$f" ] && ! git diff --quiet -- "$f"; then
-			echo "  re-staging: $f"
-			git add "$f"
-		fi
-	done
-fi
+# Re-stage only the files whose worktree content the formatters changed.
+while read -r h f; do
+	if [ -n "$f" ] && [ -f "$f" ] && [ "$(git hash-object "$f")" != "$h" ]; then
+		echo "  re-staging: $f"
+		git add -- "$f"
+	fi
+done < "$before"
 
 echo "==> golangci-lint run..."
 golangci-lint run ./...

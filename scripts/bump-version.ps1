@@ -23,6 +23,9 @@ $Current = (Select-String -Path $VersionFile -Pattern 'Version\s*=' | Select-Obj
 Write-Host "Current version: $Current"
 
 $parts = $Current -split '\.'
+if ($parts.Count -ne 3 -or ($parts | Where-Object { $_ -notmatch '^\d+$' }).Count -ne 0) {
+    throw "Could not parse a semver from $VersionFile (got: '$Current')"
+}
 $Major = [int]$parts[0]
 $Minor = [int]$parts[1]
 $Patch = [int]$parts[2]
