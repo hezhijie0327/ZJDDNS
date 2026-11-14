@@ -58,7 +58,8 @@ func main() {
 
 	versionStr := getVersion()
 	if _, err := fmt.Print(banner(versionStr)); err != nil {
-		fmt.Fprintf(os.Stderr, "warning: writing banner: %v\n", err)
+		// Degraded-but-continuing: the banner is cosmetic, startup proceeds.
+		log.Warnf("CONFIG: Failed to write banner: %v", err)
 	}
 
 	// Load the configuration.
