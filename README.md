@@ -1,21 +1,20 @@
 # ZJDDNS
 
-```
-███████╗     ██╗██████╗ ██████╗ ███╗   ██╗███████╗
-╚══███╔╝     ██║██╔══██╗██╔══██╗████╗  ██║██╔════╝
-  ███╔╝      ██║██║  ██║██║  ██║██╔██╗ ██║███████╗
- ███╔╝  ██   ██║██║  ██║██║  ██║██║╚██╗██║╚════██║
-███████╗╚█████╔╝██████╔╝██████╔╝██║ ╚████║███████║
-╚══════╝ ╚════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
-
-```
-
 [![Version](https://img.shields.io/badge/Version-2.0.1-informational)](https://github.com/hezhijie0327/ZJDDNS/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0--Commons%20Clause-blue)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.27-00ADD8?logo=go)](https://go.dev/)
 [![Lint](https://img.shields.io/badge/golangci--lint-0%20issues-success)](https://golangci-lint.run/)
 
 轻量级、零第三方依赖的 DDNS 更新工具。WAN IP 变化时自动更新 DNS 记录。
+
+## 特性
+
+- **多种 DNS 记录类型**：支持 A（IPv4）、AAAA（IPv6）以及同时更新两种记录
+- **自动 IP 检测**：DNS 查询优先，失败自动回退 HTTP trace
+- **双操作模式**：创建/更新 DNS 记录或删除记录
+- **零第三方依赖**：纯标准库构建，DNS 报文查询/解析为手写实现
+- **Docker 支持**：多架构 Docker 镜像（linux/amd64、linux/arm64）
+- **Provider 机制**：每个提供商一个配置段，**同一提供商可配多个域名、多个提供商可并存**；新提供商以插件包形式接入（`providers/`）
 
 ## 快速开始
 
@@ -44,15 +43,6 @@ go build -o zjddns ./cmd/zjddns
 # 生成示例配置文件
 ./zjddns -generate-config > config.json
 ```
-
-## 核心特性
-
-- 🚀 **多种 DNS 记录类型**：支持 A（IPv4）、AAAA（IPv6）以及同时更新两种记录
-- 🔄 **自动 IP 检测**：DNS 查询优先，失败自动回退 HTTP trace
-- 🎯 **双操作模式**：创建/更新 DNS 记录或删除记录
-- 🧱 **零第三方依赖**：纯标准库构建，DNS 报文查询/解析为手写实现
-- 🐳 **Docker 支持**：多架构 Docker 镜像（linux/amd64、linux/arm64）
-- 🔌 **Provider 机制**：每个提供商一个配置段，**同一提供商可配多个域名、多个提供商可并存**；新提供商以插件包形式接入（`providers/`）
 
 ## 命令行参数
 
@@ -90,9 +80,9 @@ go build -o zjddns ./cmd/zjddns
 
 | 字段             | 类型   | 必填 | 说明                                                                  |
 | ---------------- | ------ | ---- | --------------------------------------------------------------------- |
-| `ip`             | string | ❌   | IP 地址：`auto`（自动检测）、静态 IP 或 `ipv4,ipv6`（默认：`auto`）   |
-| `update_interval`| int    | ❌   | 更新间隔秒数（默认：`300`，`0` 表示只运行一次）                       |
-| `log_level`      | string | ❌   | 日志级别：`error`/`warn`/`info`/`debug`，支持 `debug:CLOUDFLARE,IPDETECT` 组件过滤（默认：`info`） |
+| `ip`             | string | 否   | IP 地址：`auto`（自动检测）、静态 IP 或 `ipv4,ipv6`（默认：`auto`）   |
+| `update_interval`| int    | 否   | 更新间隔秒数（默认：`300`，`0` 表示只运行一次）                       |
+| `log_level`      | string | 否   | 日志级别：`error`/`warn`/`info`/`debug`，支持 `debug:CLOUDFLARE,IPDETECT` 组件过滤（默认：`info`） |
 
 ### 提供商配置
 
